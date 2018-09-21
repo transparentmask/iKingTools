@@ -131,7 +131,7 @@ def process_dll(iking_path, dll_name, output_path, mapping):
 if __name__ == '__main__':
     parse = argparse.ArgumentParser()
     parse.add_argument('--iking', help='iking game folder', dest='iking_path', default='iKing', type=str)
-    parse.add_argument('--output', '-o', help='resources output', dest='output_path', default='Resources1', type=str)
+    parse.add_argument('--output', '-o', help='resources output', dest='output_path', default='Resources', type=str)
     args = parse.parse_args()
 
     mapping = {}
@@ -145,7 +145,7 @@ if __name__ == '__main__':
         bar.cursor.restore()
         bar.draw(value=(index + 1))
 
-    with open("resources1.json", "wb") as file:
+    with open("resources.json", "wb") as file:
         json.dump(mapping, file, indent=4)
         file.close()
 
