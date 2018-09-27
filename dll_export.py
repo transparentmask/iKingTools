@@ -25,8 +25,11 @@ def write_bitmap(output_folder, data, name, ext='bmp'):
     final_data.extend([0x42, 0x4D])
     final_data.extend(iKingUtils.int2hex(0x0E + len(data), bigEndian=False))
     final_data.extend([0x00, 0x00, 0x00, 0x00])
-    palette_data_len = iKingUtils.hex2int(bytearray(data[0x14:0x18]), bigEndian=False)
-    final_data.extend(iKingUtils.int2hex(len(data) - palette_data_len + 0x0E, bigEndian=False))
+    if data[0x14:0x18] == '\x00\x00\x00\x00':
+        final_data.extend(iKingUtils.int2hex(0x42, bigEndian=False))
+    else:
+        palette_data_len = iKingUtils.hex2int(bytearray(data[0x14:0x18]), bigEndian=False)
+        final_data.extend(iKingUtils.int2hex(len(data) - palette_data_len + 0x0E, bigEndian=False))
     final_data.extend(data)
 
     if not os.path.exists(output_folder):
