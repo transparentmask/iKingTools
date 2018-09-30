@@ -199,6 +199,7 @@ class MapRender(object):
                 draw.line([(0, y * MapGridData.PIXEL_HEIGHT), (self.map.map_grids_max[0] * MapGridData.PIXEL_WIDTH, y * MapGridData.PIXEL_HEIGHT)], fill=(0x80, 0x81, 0x00))
 
         map_image.convert('RGB').save('maps/%s.%s' % (self.map.map_id, img_format))
+        map_image.close()
         log.flush()
         log.close()
 
@@ -234,6 +235,217 @@ class MapRender(object):
         return image
 
 
+class MapThumbnailRender(object):
+    def __init__(self, map_id):
+        self.gob_infos = GobInfo()
+        self.map = MapInfo(map_id=map_id)
+        self.colors = [
+            [0x00, 0x00, 0x00, 0x00], [0x00, 0xA4, 0xA8, 0x00], [0x13, 0x84, 0x52, 0x00], [0x0B, 0x5F, 0x3A, 0x00],
+            [0x36, 0x66, 0x8C, 0x00], [0x6E, 0xA4, 0xC8, 0x00], [0x00, 0x68, 0xA0, 0x00], [0x22, 0x4D, 0x73, 0x00],
+            [0xF4, 0xCF, 0x8D, 0x00], [0xEB, 0xB2, 0x00, 0x00], [0xB3, 0x69, 0x00, 0x00], [0x95, 0x43, 0x32, 0x00],
+            [0x29, 0x2A, 0x33, 0x00], [0x55, 0x64, 0x76, 0x00], [0x75, 0x8B, 0x9E, 0x00], [0x58, 0x5F, 0x99, 0x00],
+            [0x73, 0x73, 0x73, 0x00], [0x73, 0x73, 0x73, 0x00], [0x73, 0x73, 0x73, 0x00], [0x6F, 0x61, 0x00, 0x00],
+            [0x02, 0xD3, 0xCC, 0x00], [0x5E, 0xC4, 0xB2, 0x00], [0x00, 0x4A, 0x74, 0x00], [0x19, 0x49, 0xA9, 0x00],
+            [0x33, 0x33, 0x33, 0x00], [0xA8, 0xE9, 0xF9, 0x00], [0x4F, 0x83, 0xA9, 0x00], [0x77, 0xBC, 0xD5, 0x00],
+            [0x00, 0x64, 0x00, 0x00], [0x3C, 0x44, 0x52, 0x00], [0xBF, 0xBF, 0xBF, 0x00], [0xE6, 0xE6, 0xE6, 0x00],
+            [0x00, 0x47, 0xE4, 0x00], [0x6A, 0x41, 0x47, 0x00], [0x3E, 0x00, 0x80, 0x00], [0x82, 0x82, 0x82, 0x00],
+            [0x6A, 0x6D, 0x2B, 0x00], [0x57, 0x44, 0x0E, 0x00], [0xFF, 0xFF, 0xFF, 0x00], [0x42, 0x31, 0x42, 0x00],
+            [0x3C, 0x3C, 0x64, 0x00], [0x3C, 0x3C, 0x6E, 0x00], [0xF7, 0x73, 0x29, 0x00], [0x3D, 0x2D, 0x08, 0x00],
+            [0x53, 0x4A, 0x4D, 0x00], [0x35, 0x29, 0x39, 0x00], [0x28, 0xD8, 0x10, 0x00]
+        ]
+        self.convert_table = [
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x0A,
+            0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x13, 0x14, 0x15, 0x03, 0x21,
+            0x1D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x01, 0x03, 0x06, 0x02, 0x02, 0x07, 0x02, 0x05,
+            0x04, 0x06, 0x06, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x05, 0x06, 0x00,
+            0x00, 0x00, 0x0A, 0x05, 0x0B, 0x02, 0x08, 0x02, 0x08, 0x09,
+            0x0B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x10,
+            0x11, 0x11, 0x11, 0x11, 0x12, 0x12, 0x16, 0x17, 0x18, 0x18,
+            0x18, 0x18, 0x19, 0x1B, 0x11, 0x11, 0x17, 0x1A, 0x1B, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x23, 0x00,
+            0x0C, 0x0D, 0x0E, 0x0F, 0x0C, 0x0D, 0x0E, 0x0F, 0x0D, 0x0F,
+            0x0E, 0x0C, 0x0C, 0x0D, 0x0E, 0x0F, 0x08, 0x08, 0x14, 0x14,
+            0x15, 0x15, 0x15, 0x15, 0x15, 0x15, 0x0D, 0x0D, 0x04, 0x04,
+            0x03, 0x03, 0x03, 0x03, 0x21, 0x21, 0x21, 0x21, 0x21, 0x21
+        ]
+
+    def render(self, img_format="png", pixel_size=4):
+        MAX_VALUE = self.map.map_grids_max[0] * self.map.map_grids_max[1]
+
+        bar = Bar(max_value=MAX_VALUE, fallback=True)
+
+        map_image = Image.new('RGB', (self.map.map_grids_max[0] * pixel_size, self.map.map_grids_max[1] * pixel_size))
+        thumbnail_file = open('maps/%s_thumbnail.map' % (self.map.map_id), "wb")
+        thumbnail_file.write(iKingUtils.int2hex(self.map.map_grids_max[0], 2, bigEndian=False))
+        thumbnail_file.write(iKingUtils.int2hex(self.map.map_grids_max[1] * 2, 2, bigEndian=False))
+
+        print "Render thumbnail %s:" % self.map.map_id
+
+        addon_items = {}
+        for item in self.map.addon_items:
+            if item.y not in addon_items:
+                addon_items[item.y] = {}
+            addon_items[item.y][item.x] = item
+
+        bar.cursor.clear_lines(2)
+        bar.cursor.save()
+        for (y, line) in enumerate(self.map.map_datas):
+            for (x, map_grid) in enumerate(self.map.map_datas[y]):
+                map_grid = self.map.map_datas[y][x]
+                color_id = self.convert((map_grid.item << 0x10) + map_grid.ground)
+                # if map_grid.item == 0 and y in addon_items and x in addon_items[y]:
+                #     color_id = self.convert((addon_items[y][x].item << 0x10) + map_grid.ground)
+                # if x == 90 and y == 10:
+                #     ii = iKingUtils.int2hex(map_grid.item, 2)
+                #     ai = 0
+                #     if y in addon_items and x in addon_items[y]:
+                #         ai = addon_items[y][x].item
+                #     ai = iKingUtils.int2hex(ai, 2)
+                #     gi = iKingUtils.int2hex(map_grid.ground, 2)  # 8D 5D
+                #     i = iKingUtils.int2hex((map_grid.item << 0x10) + map_grid.ground, 4)  # 8D 5D
+                #     ci = iKingUtils.int2hex(color_id, 1)  # 15 (1C)
+                #     if y in addon_items and x in addon_items[y]:
+                #         cia = self.convert((map_grid.item << 0x10) + map_grid.ground)
+                #         ci += iKingUtils.int2hex(cia, 1)
+                color = self.colors[color_id]
+                thumbnail_file.write(iKingUtils.int2hex(color_id, 1, bigEndian=False))
+
+                color_image = Image.new('RGB', (pixel_size, pixel_size), (color[2], color[1], color[0]))
+                map_image.paste(color_image, (x * pixel_size, y * pixel_size))
+                color_image.close()
+
+                bar.cursor.restore()
+                bar.draw(value=y * self.map.map_grids_max[0] + x + 1)
+
+        # print "\n%s, map_grid.item: %s, map_grid.ground: %s addon_item: %s, color_id: %s\n" % (iKingUtils.dump_bytearray(i, ret=True), iKingUtils.dump_bytearray(ii, ret=True), iKingUtils.dump_bytearray(gi, ret=True), iKingUtils.dump_bytearray(ai, ret=True), iKingUtils.dump_bytearray(ci, ret=True))
+        map_image.save('maps/%s_thumbnail.%s' % (self.map.map_id, img_format))
+        map_image.close()
+        thumbnail_file.close()
+
+    def convert(self, ground_id):
+        if ground_id == 0:
+            return 0
+        hiword = (ground_id >> 0x10) & 0xFFFF
+        byte1 = ((ground_id & 0xffff) >> 0x08) & 0xff
+
+        if hiword >= 0x321 and hiword <= 0x36E:
+            return 0x1E
+        if byte1 >= 0x58 and byte1 <= 0x67:
+            return self.convert_table[byte1]
+        if hiword >= 0x2328:
+            return self.convert_table[byte1]
+        if hiword >= 0x01 and hiword <= 0x40:
+            return 0x1C
+        if hiword >= 0x41 and hiword <= 0x60:
+            return 0x1D
+        if hiword >= 0xF1 and hiword <= 0x130:
+            return 0x1F
+        if hiword >= 0x60F and hiword <= 0x64F:
+            return 0x1F
+        if hiword >= 0xC8 and hiword <= 0x154:
+            return 0x11
+        if hiword >= 0x579 and hiword <= 0x658:
+            return 0x11
+        if hiword != 0:
+            return 0x1E
+        if byte1 > 0xDC and byte1 < 0xED:
+            return self.convert2(byte1, ((ground_id >> 2) & 0x3F) + 0x01)
+
+        if byte1 < 0xA0 or byte1 > 0xA5:
+            if byte1 < 0xED or byte1 > 0xFF:
+                if byte1 >= 0xCE and byte1 <= 0xD1:
+                    return 0x28
+                if byte1 >= 0xD2 and byte1 <= 0xD4:
+                    return 0x29
+                if byte1 < 0xC9 or byte1 > 0xD2:
+                    if byte1 < 0x15 or byte1 > 0x15:
+                        if byte1 < 0x1E or byte1 > 0x1F:
+                            if byte1 >= 0xA6 and byte1 <= 0xB7:
+                                return 0x27
+                            if byte1 >= 0xB8 and byte1 <= 0xBA:
+                                return 0x2A
+                            if byte1 >= 0xBB and byte1 <= 0xBC:
+                                return 0x2B
+                            if byte1 >= 0xBD and byte1 <= 0xC0 or byte1 >= 0xC2 and byte1 <= 0xC5:
+                                return 0x2C
+                            if byte1 == 0xC1:
+                                return 0x2D
+                            if byte1 >= 0xD5 and byte1 <= 0xD7:
+                                return 0x2E
+                            if byte1 >= 0xD8 and byte1 <= 0xD9:
+                                return 0x2B
+                        else:
+                            v2 = ground_id >> 2
+                            if v2 >= 0x780 and v2 <= 0x797 or v2 >= 0x7C0 and v2 <= 0x7D7:
+                                return 0x02
+                    else:
+                        v3 = ground_id >> 2
+                        if v3 >= 0x540 and v3 <= 0x557:
+                            return 0x26
+                else:
+                    v4 = ground_id >> 2
+                    if v4 >= 0x3240 and v4 <= 0x3343:
+                        return 0x20
+            else:
+                v5 = ground_id >> 2
+                if v5 >= 0x3B40 and v5 <= 0x3C7F:
+                    return 0x25
+                if v5 >= 0x3C80 and v5 <= 0x3DBF:
+                    return 0x24
+                if v5 >= 0x3DC0 and v5 <= 0x3F9F:
+                    return 0x22
+        else:
+            v6 = ground_id >> 2
+            if v6 >= 0x2800 and v6 <= 0x287F:
+                return 0x02
+            if v6 >= 0x2880 and v6 <= 0x28FF:
+                return 0x06
+            if v6 >= 0x2900 and v6 <= 0x291F:
+                return 0x05
+            if v6 >= 0x2920 and v6 <= 0x293F:
+                return 0x08
+            if v6 >= 0x2940 and v6 <= 0x295F:
+                return 0x02
+        if byte1 >= 0xA0:
+            return 0x00
+
+        return self.convert_table[byte1]
+
+    def convert2(self, par1, par2):
+        result = 0x09
+        if par1 == 0xE0 or par1 == 0xE1 or par1 == 0xE2:
+            return result if par2 < 0x01 or par2 > 0x03 else 0x02
+        elif par1 == 0xE5:
+            if (par2 < 0x01 or par2 > 0x07) and (par2 < 0x0B or par2 > 0x0E) and \
+               (par2 < 0x13 or par2 > 0x15) and (par2 < 0x1B or par2 > 0x1C) and \
+               par2 != 0x23 and par2 != 0x24 and (par2 < 0x2A or par2 > 0x2C):
+                return result
+            return 0x02
+        elif par1 == 0xE6:
+            if (par2 < 0x01 or par2 > 0x02) and (par2 < 0x08 or par2 > 0x09) and \
+               (par2 < 0x16 or par2 > 0x17) and (par2 < 0x1D or par2 > 0x1E) and \
+               (par2 < 0x2A or par2 > 0x2B) and (par2 < 0x30 or par2 > 0x31) and par2 != 0x24:
+                return result
+            return 0x02
+        elif par1 == 0xE7:
+            if (par2 < 0x01 or par2 > 0x0B) and (par2 < 0x0F or par2 > 0x11) and \
+               (par2 < 0x21 or par2 > 0x23) and (par2 < 0x27 or par2 > 0x2A) and \
+               (par2 < 0x2C or par2 > 0x31) and par2 != 0x15 and par2 != 0x1C:
+                return result
+            return 0x02
+        elif par1 == 0xE8:
+            if (par2 < 0x06 or par2 > 0x08) and (par2 < 0x0D or par2 > 0x0F) and \
+               (par2 < 0x15 or par2 > 0x17) and (par2 < 0x1D or par2 > 0x1F) and \
+               (par2 < 0x24 or par2 > 0x27) and (par2 < 0x2B or par2 > 0x2F) and par2 != 0x01:
+                return result
+            return 0x02
+
+        return result
+
+
 def test():
     map_image = Image.new('RGBA', (300, 300))
 
@@ -260,8 +472,12 @@ def test():
 
 
 def render_map(map_id, res_dict, format_="jpg", draw_grids=False, show_log=False):
-    render = MapRender(map_id, res_dict)
-    render.render(format_, draw_grids)
+    # render = MapRender(map_id, res_dict)
+    # render.render(format_, draw_grids)
+
+    render = MapThumbnailRender(map_id)
+    render.render(pixel_size=8)
+
     if show_log:
         os.system('cat %s' % MapRender.LOG_FILE)
 
