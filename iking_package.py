@@ -437,6 +437,8 @@ class iKingPackage:
                 action = "脱装备"
             elif data4 == 0x0F:
                 action = "死亡"
+            elif data4 == 0x12:
+                action = "低头(冥想?)"
             elif data4 == 0x13 or data4 == 0x14 or data4 == 0x15 or data4 == 0x16:
                 if data2 == 0x00:
                     action = "施法 0x%.2X" % data4
