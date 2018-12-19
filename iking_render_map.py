@@ -57,7 +57,7 @@ class GobInfo():
 
 
 class MapRender(object):
-    GobBmp_BK = [0xFF, 0x00, 0xFF]
+    GobBmp_BK = (0xFF, 0x00, 0xFF, 0x00)
     LOG_FILE = "%s/render.log" % (MapInfo.MAP_FOLDER)
 
     def __init__(self, map_id, resource_mapping_file):
@@ -226,8 +226,8 @@ class MapRender(object):
                 newData = []
 
                 for item in datas:
-                    if item[0] == MapRender.GobBmp_BK[0] and item[1] == MapRender.GobBmp_BK[1] and item[2] == MapRender.GobBmp_BK[2]:
-                        newData.append((MapRender.GobBmp_BK[0], MapRender.GobBmp_BK[1], MapRender.GobBmp_BK[2], 0))
+                    if item[:3] == MapRender.GobBmp_BK[:3]:
+                        newData.append(MapRender.GobBmp_BK)
                     else:
                         newData.append(item)
 
@@ -460,8 +460,8 @@ def test():
 
     for item in datas:
         # print "0x%.2X 0x%.2X 0x%.2X" % (item[0], item[1], item[2])
-        if item[0] == MapRender.GobBmp_BK[0] and item[1] == MapRender.GobBmp_BK[1] and item[2] == MapRender.GobBmp_BK[2]:
-            newData.append((MapRender.GobBmp_BK[0], MapRender.GobBmp_BK[1], MapRender.GobBmp_BK[2], 0))
+        if item[:3] == MapRender.GobBmp_BK[:3]:
+            newData.append(MapRender.GobBmp_BK)
         else:
             newData.append(item)
 
@@ -472,8 +472,8 @@ def test():
 
 
 def render_map(map_id, res_dict, format_="jpg", draw_grids=False, show_log=False):
-    # render = MapRender(map_id, res_dict)
-    # render.render(format_, draw_grids)
+    render = MapRender(map_id, res_dict)
+    render.render(format_, draw_grids)
 
     render = MapThumbnailRender(map_id)
     render.render(pixel_size=8)
