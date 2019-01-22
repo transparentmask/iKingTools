@@ -49,6 +49,7 @@ class MapAddonItem(object):
         self.x = iKingUtils.hex2int(map_addon_data[0:2])
         self.y = iKingUtils.hex2int(map_addon_data[2:4])
         self.y = int(self.y / 2)
+        self.y_odd = (self.y % 2 == 1)
         self.offset = iKingUtils.hex2int(map_addon_data[4:6])
         self.item_hex = map_addon_data[6:8]
         self.item = iKingUtils.hex2int(self.item_hex)

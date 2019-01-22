@@ -406,6 +406,7 @@ class iKingGroundItem(iKingBaseMod):
         self.unknown = data[ti:ti + 1]
         self.item_id = iKingUtils.hex2int(data[ti + 1:ti + 3])
         self.item_type = iKingUtils.hex2int(data[-1:])
+        self.y_odd = (self.y % 2 == 1)
 
         self.key = "%d_%d" % (self.x, self.y)
 

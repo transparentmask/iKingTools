@@ -70,7 +70,7 @@ class MapRender(object):
     def render_ground(self):
         pass
 
-    def render_item(self, map_image, x, y, item_id, image_cache, use_addon, log):
+    def render_item(self, map_image, x, y, y_odd, item_id, image_cache, use_addon, log):
         if item_id in image_cache:
             item_image = image_cache[item_id]
         else:
@@ -85,6 +85,9 @@ class MapRender(object):
                 x_offset = gob['locate_x'] - width
                 y_offset = gob['locate_y'] - height
                 if use_addon:
+                    x_offset += MapGridData.PIXEL_WIDTH / 2
+                    y_offset += MapGridData.PIXEL_HEIGHT / 2
+                if y_odd:
                     x_offset += MapGridData.PIXEL_WIDTH / 2
                     y_offset += MapGridData.PIXEL_HEIGHT / 2
             # elif item_id in self.gob_infos.gobs:
@@ -154,7 +157,6 @@ class MapRender(object):
                         items.append("%d_%d" % (x, y))
                 bar.cursor.restore()
                 bar.draw(value=y * self.map.map_grids_max[0] + x + 1)
-
         if len(items) > 0:
             print "Draw Items:"
             bar.max_value = len(items)
@@ -167,16 +169,16 @@ class MapRender(object):
                 x, y = map(lambda p: int(p), s.split("_"))
                 map_grid = self.map.map_datas[y][x]
                 if map_grid.item != 0:
-                    self.render_item(map_image, x, y, map_grid.item, image_cache, False, log)
+                    self.render_item(map_image, x, y, False, map_grid.item, image_cache, False, log)
 
                 if y in addon_items and x in addon_items[y]:
                     addon_item = addon_items[y][x]
-                    self.render_item(map_image, x, y, addon_item.item, image_cache, True, log)
+                    self.render_item(map_image, x, y, False, addon_item.item, image_cache, True, log)
 
                 if y in clickable_items and x in clickable_items[y]:
                     clickable_item = clickable_items[y][x]
                     log.write("clickable: [%d, %d] %d\n" % (x, y, clickable_item.item_id))
-                    self.render_item(map_image, x, y, clickable_item.item_id, image_cache, False, log)
+                    self.render_item(map_image, x, y, clickable_item.y_odd, clickable_item.item_id, image_cache, False, log)
 
                 bar.cursor.restore()
                 bar.draw(value=i + 1)
