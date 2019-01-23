@@ -67,6 +67,22 @@ class MapRender(object):
             self.res_mapping = json.load(file)
             file.close()
 
+    def is_out_door(self, ground_id):
+        if ground_id < 0x1600:
+            if ground_id < 0xB00:
+                return (True, "outdoor")
+            elif ground_id >= 0x1100:
+                return (True, "outdoor")
+            else:
+                return (False, "indoor")
+        elif ground_id < 0x1E00:
+            # ?
+            return (False, "indoor")
+        else:
+            return (True, "outdoor")
+
+        return (None, "Unknown")
+
     def render_ground(self):
         pass
 
@@ -138,6 +154,9 @@ class MapRender(object):
                 map_grid = self.map.map_datas[y][x]
                 if map_grid.ground != 0:
                     ground_id = map_grid.ground >> 2
+                    if ground_id >= 0x1B80 and ground_id <= 0x1BBF:
+                        ground_id -= 0x500
+
                     if ground_id in image_cache:
                         ground_image = image_cache[ground_id]
                     else:
@@ -149,11 +168,14 @@ class MapRender(object):
                     else:
                         log.write("not found ground: [%d, %d] %d -> %d\n" % (x, y, map_grid.ground, ground_id))
 
+                    add_item = False
                     if y in addon_items and x in addon_items[y]:
-                        items.append("%d_%d" % (x, y))
+                        add_item = True
                     elif y in clickable_items and x in clickable_items[y]:
-                        items.append("%d_%d" % (x, y))
+                        add_item = True
                     elif map_grid.item != 0 and map_grid.item in self.gob_infos.gobs:
+                        add_item = True
+                    if add_item:
                         items.append("%d_%d" % (x, y))
                 bar.cursor.restore()
                 bar.draw(value=y * self.map.map_grids_max[0] + x + 1)
