@@ -150,6 +150,7 @@ class MapRender(object):
         image_cache = {}
         items = []
         for (y, line) in enumerate(self.map.map_datas):
+            x_items = []
             for (x, map_grid) in enumerate(self.map.map_datas[y]):
                 map_grid = self.map.map_datas[y][x]
                 if map_grid.ground != 0:
@@ -176,9 +177,11 @@ class MapRender(object):
                     elif map_grid.item != 0 and map_grid.item in self.gob_infos.gobs:
                         add_item = True
                     if add_item:
-                        items.append("%d_%d" % (x, y))
+                        x_items.append("%d_%d" % (x, y))
                 bar.cursor.restore()
                 bar.draw(value=y * self.map.map_grids_max[0] + x + 1)
+            items.extend(reversed(x_items))
+
         if len(items) > 0:
             print "Draw Items:"
             bar.max_value = len(items)
