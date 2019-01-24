@@ -59,25 +59,21 @@ class iKingUtils:
         hex_ba = bytearray(length)
         for i in range(length):
             hex_ba[length - i - 1] = (value >> (i * 8)) & 0xFF
-        if bigEndian is False:
-            hex_ba.reverse()
-        return hex_ba
+
+        return hex_ba if bigEndian else bytearray(reversed(hex_ba))
 
     @staticmethod
     def hex2int(hex_ba, bigEndian=True, highAsFlag=False):
-        if bigEndian is False:
-            hex_ba.reverse()
+        ba = hex_ba if bigEndian else bytearray(reversed(hex_ba))
 
         value = 0
-        length = len(hex_ba)
+        length = len(ba)
         r = range(length) if highAsFlag is False else range(1, length)
         for i in r:
-            value += hex_ba[i] << ((length - i - 1) * 8)
-        if highAsFlag is True and hex_ba[0] == 0xFF:
+            value += ba[i] << ((length - i - 1) * 8)
+        if highAsFlag is True and ba[0] == 0xFF:
             value = value - 0xFF
 
-        if bigEndian is False:
-            hex_ba.reverse()
         return value
 
     @staticmethod
